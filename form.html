@@ -20,32 +20,37 @@
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
     }
-
+    
     function renderForm(formJson) {
       document.getElementById('form-title').innerText = formJson.title || "Form";
-
+    
       const form = document.getElementById('dynamic-form');
       form.innerHTML = "";
-
+    
       formJson.fields.forEach(field => {
         let el;
-        const label = document.createElement('label');
-        label.innerText = field.label;
-
+        const labelEl = document.createElement('label');
+        labelEl.innerText = field.label;
+    
         switch(field.type) {
           case "text":
           case "email":
           case "number":
             el = document.createElement('input');
             el.type = field.type;
+            el.name = field.label;
             el.required = field.required || false;
             break;
+    
           case "textarea":
             el = document.createElement('textarea');
+            el.name = field.label;
             el.required = field.required || false;
             break;
+    
           case "dropdown":
             el = document.createElement('select');
+            el.name = field.label;
             field.options.forEach(opt => {
               const option = document.createElement('option');
               option.value = opt;
@@ -53,10 +58,14 @@
               el.appendChild(option);
             });
             break;
+    
           case "checkbox":
             el = document.createElement('input');
             el.type = "checkbox";
+            el.name = field.label;
+            el.checked = false;
             break;
+    
           case "radio":
             el = document.createElement('div');
             field.options.forEach(opt => {
@@ -71,49 +80,51 @@
               el.appendChild(document.createElement('br'));
             });
             break;
+    
           case "date":
             el = document.createElement('input');
             el.type = "date";
+            el.name = field.label;
             el.required = field.required || false;
             break;
+    
           default:
             el = document.createElement('div');
             el.innerText = "Unsupported field type: " + field.type;
         }
-
-        if (field.type !== "radio") {
-          form.appendChild(label);
-          form.appendChild(el);
-        } else {
-          form.appendChild(label);
-          form.appendChild(el);
-        }
+    
+        form.appendChild(labelEl);
+        form.appendChild(el);
       });
 
       const submitBtn = document.createElement('button');
       submitBtn.type = "submit";
       submitBtn.innerText = "Submit";
       form.appendChild(submitBtn);
-
+    
       form.addEventListener('submit', e => {
         e.preventDefault();
         const formData = new FormData(form);
         const dataObj = {};
+    
         formJson.fields.forEach(field => {
-          if(field.type === "checkbox") {
-            dataObj[field.label] = formData.get(field.label) === "on";
-          } else if(field.type === "radio") {
-            const selected = form.querySelector(`input[name="${field.label}"]:checked`);
-            dataObj[field.label] = selected ? selected.value : null;
-          } else {
-            dataObj[field.label] = formData.get(field.label);
+          switch(field.type) {
+            case "checkbox":
+              dataObj[field.label] = formData.get(field.label) === "on" ? true : false;
+              break;
+            case "radio":
+              const selected = form.querySelector(`input[name="${field.label}"]:checked`);
+              dataObj[field.label] = selected ? selected.value : null;
+              break;
+            default:
+              dataObj[field.label] = formData.get(field.label) || null;
           }
         });
+    
         alert("Form submitted!\n\n" + JSON.stringify(dataObj, null, 2));
       });
     }
-
-    // Read base64 from URL
+    
     const encoded = getQueryParam("data");
     if(encoded) {
       try {
@@ -127,6 +138,7 @@
       document.body.innerHTML = "<h3>No form data provided</h3>";
     }
 </script>
+
 
 </body>
 </html>
