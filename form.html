@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        input, select, textarea { display: block; width: 100%; margin: 8px 0 16px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h2 id="form-title">Loading form...</h2>
+<form id="dynamic-form"></form>
+
+<script>
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    function renderForm(formJson) {
+      document.getElementById('form-title').innerText = formJson.title || "Form";
+
+      const form = document.getElementById('dynamic-form');
+      form.innerHTML = "";
+
+      formJson.fields.forEach(field => {
+        let el;
+        const label = document.createElement('label');
+        label.innerText = field.label;
+
+        switch(field.type) {
+          case "text":
+          case "email":
+          case "number":
+            el = document.createElement('input');
+            el.type = field.type;
+            el.required = field.required || false;
+            break;
+          case "textarea":
+            el = document.createElement('textarea');
+            el.required = field.required || false;
+            break;
+          case "dropdown":
+            el = document.createElement('select');
+            field.options.forEach(opt => {
+              const option = document.createElement('option');
+              option.value = opt;
+              option.innerText = opt;
+              el.appendChild(option);
+            });
+            break;
+          case "checkbox":
+            el = document.createElement('input');
+            el.type = "checkbox";
+            break;
+          case "radio":
+            el = document.createElement('div');
+            field.options.forEach(opt => {
+              const radio = document.createElement('input');
+              radio.type = "radio";
+              radio.name = field.label;
+              radio.value = opt;
+              const radioLabel = document.createElement('label');
+              radioLabel.innerText = opt;
+              el.appendChild(radio);
+              el.appendChild(radioLabel);
+              el.appendChild(document.createElement('br'));
+            });
+            break;
+          case "date":
+            el = document.createElement('input');
+            el.type = "date";
+            el.required = field.required || false;
+            break;
+          default:
+            el = document.createElement('div');
+            el.innerText = "Unsupported field type: " + field.type;
+        }
+
+        if (field.type !== "radio") {
+          form.appendChild(label);
+          form.appendChild(el);
+        } else {
+          form.appendChild(label);
+          form.appendChild(el);
+        }
+      });
+
+      const submitBtn = document.createElement('button');
+      submitBtn.type = "submit";
+      submitBtn.innerText = "Submit";
+      form.appendChild(submitBtn);
+
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const dataObj = {};
+        formJson.fields.forEach(field => {
+          if(field.type === "checkbox") {
+            dataObj[field.label] = formData.get(field.label) === "on";
+          } else if(field.type === "radio") {
+            const selected = form.querySelector(`input[name="${field.label}"]:checked`);
+            dataObj[field.label] = selected ? selected.value : null;
+          } else {
+            dataObj[field.label] = formData.get(field.label);
+          }
+        });
+        alert("Form submitted!\n\n" + JSON.stringify(dataObj, null, 2));
+      });
+    }
+
+    // Read base64 from URL
+    const encoded = getQueryParam("data");
+    if(encoded) {
+      try {
+        const jsonStr = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'));
+        const formJson = JSON.parse(jsonStr);
+        renderForm(formJson);
+      } catch(e) {
+        document.body.innerHTML = "<h3>Error loading form</h3>";
+      }
+    } else {
+      document.body.innerHTML = "<h3>No form data provided</h3>";
+    }
+</script>
+
+</body>
+</html>
