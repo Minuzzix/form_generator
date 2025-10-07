@@ -20,18 +20,18 @@
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
     }
-    
+
     function renderForm(formJson) {
       document.getElementById('form-title').innerText = formJson.title || "Form";
-    
+
       const form = document.getElementById('dynamic-form');
       form.innerHTML = "";
-    
+
       formJson.fields.forEach(field => {
         let el;
         const labelEl = document.createElement('label');
         labelEl.innerText = field.label;
-    
+
         switch(field.type) {
           case "text":
           case "email":
@@ -42,13 +42,13 @@
             el.name = field.label;
             el.required = field.required || false;
             break;
-    
+
           case "textarea":
             el = document.createElement('textarea');
             el.name = field.label;
             el.required = field.required || false;
             break;
-    
+
           case "dropdown":
             el = document.createElement('select');
             el.name = field.label;
@@ -59,14 +59,14 @@
               el.appendChild(option);
             });
             break;
-    
+
           case "checkbox":
             el = document.createElement('input');
             el.type = "checkbox";
             el.name = field.label;
             el.checked = false;
             break;
-    
+
           case "radio":
             el = document.createElement('div');
             field.options.forEach(opt => {
@@ -81,19 +81,19 @@
               el.appendChild(document.createElement('br'));
             });
             break;
-    
+
           case "date":
             el = document.createElement('input');
             el.type = "date";
             el.name = field.label;
             el.required = field.required || false;
             break;
-    
+
           default:
             el = document.createElement('div');
             el.innerText = "Unsupported field type: " + field.type;
         }
-    
+
         form.appendChild(labelEl);
         form.appendChild(el);
       });
@@ -102,12 +102,12 @@
       submitBtn.type = "submit";
       submitBtn.innerText = "Submit";
       form.appendChild(submitBtn);
-    
+
       form.addEventListener('submit', e => {
         e.preventDefault();
         const formData = new FormData(form);
         const dataObj = {};
-    
+
         formJson.fields.forEach(field => {
           switch(field.type) {
             case "checkbox":
@@ -121,11 +121,11 @@
               dataObj[field.label] = formData.get(field.label) || null;
           }
         });
-    
+
         alert("Form submitted!\n\n" + JSON.stringify(dataObj, null, 2));
       });
     }
-    
+
     const encoded = getQueryParam("data");
     if(encoded) {
       try {
@@ -143,4 +143,3 @@
 
 </body>
 </html>
-
